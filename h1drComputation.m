@@ -215,7 +215,7 @@ d : List of ramification invariants for levels 1 to n
 computeH1R := function(n,L,N,B,p,V,d)
     F := [];
     while L ne B do
-    
+
         //Computes order of vanishing of function at infinity
         vanishing := p^n*L[1];
         for i in [1 .. #L-1] do
@@ -248,6 +248,22 @@ computeH1R := function(n,L,N,B,p,V,d)
             L[1] := L[1] + 1;
         end if;
     end while;
+    
+    //Deals with the case where L = B
+    vanishing := p^n*L[1];
+    for i in [1 .. #L-1] do
+        vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
+    end for;
+
+
+    if vanishing gt 0 and vanishing le N*p^(n) then
+        func := 1;
+        for i in [1 .. n+1] do
+            func := func * V[i]^L[i];
+        end for;
+
+        Append(~F,func);
+        end if;
     
     return F;
 end function;
@@ -299,6 +315,22 @@ computeP1 := function(n,L,N,B,p,V,d)
         end if;
     end while;
     
+    //Computes order of vanishing at infinity
+        vanishing := p^n*L[1];
+        for i in [1 .. #L-1] do
+            vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
+        end for;
+
+        //If order of vanishing <= 0, add function to function list
+        if vanishing le 0 then
+            func := 1;
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+
+            Append(~F,func);
+        end if;
+    
     return F;
 
 end function;
@@ -349,6 +381,20 @@ computeP2 := function(n,L,N,B,p,V,d)
         end if;
     end while;
     
+    vanishing := p^n*L[1];
+        for i in [1 .. #L-1] do
+            vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
+        end for;
+
+        if vanishing le N*p^(n+1) then
+            func := 1;
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+
+            Append(~F,func);
+        end if;
+    
     return F;
 
 end function;
@@ -397,6 +443,21 @@ computeP12 := function(n,L,N,B,p,V,d)
         end if;
         
     end while;
+    
+    vanishing := p^n*L[1];
+        for i in [1 .. #L-1] do
+            vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
+        end for;
+
+        if vanishing le p^(n+1)*N then
+            func := 1;
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+
+            Append(~F,func);
+        end if;
+    
     return F;
 
 end function;
@@ -442,6 +503,23 @@ computeO := function(n,L,B,p,V,d)
         end for;
         
     end while;
+    
+    rhs := -p^n-1;
+        for i in [1 .. n] do
+            rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
+        end for;
+
+        /*Madden's paper shows basis elements are x^L[1]*y1^L[2]*...yn^L[n+1]
+        with p^n*L[1] <= rhs from above*/
+        while p^n*L[1] le rhs do
+            func := Differential(V[1]);
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+            Append(~F, func);
+            L[1] := L[1] + 1;
+        end while;
+    
     return F;
 
 end function;
@@ -486,6 +564,20 @@ computeO1 := function(n,L,N,B,p,V,d)
             end if;
         end for;
     end while;
+    
+    rhs := -p^n-1;
+        for i in [1 .. n] do
+            rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
+        end for;
+
+        while p^n*L[1] le rhs do
+            func := Differential(V[1]);
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+            Append(~F, func);
+            L[1] := L[1] + 1;
+        end while;
 
     return F;
 
@@ -531,6 +623,20 @@ computeO2 := function(n,L,N,B,p,V,d)
             end if;
         end for;
     end while;
+    
+    rhs := -p^n-1+p^n*(N+1);
+        for i in [1 .. n] do
+            rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
+        end for;
+
+        while p^n*L[1] le rhs do
+            func := Differential(V[1]);
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+            Append(~F, func);
+            L[1] := L[1] + 1;
+        end while;
 
     return F;
 
@@ -576,6 +682,20 @@ computeO12 := function(n,L,N,B,p,V,d)
             end if;
         end for;
     end while;
+    
+    rhs := -p^n-1+p^n*(N+1);
+        for i in [1 .. n] do
+            rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
+        end for;
+
+        while p^n*L[1] le rhs do
+            func := Differential(V[1]);
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+            Append(~F, func);
+            L[1] := L[1] + 1;
+        end while;
 
     return F;
 
@@ -674,16 +794,30 @@ computeH1dR := function(K,d,n,f)
         new_ys := ys;
     end if;
     
+    y4 := K.1;
+    L := BaseField(K);
+    y3 := K!(L.1);
+    A := BaseField(L);
+    y2 := K!(A.1);
+    B := BaseField(A);
+    y1 := K!(B.1);
+    C := BaseField(B);
+    x := K!(C.1);
+    AssignNames(~K, ["y4"]);
+    AssignNames(~L, ["y3"]);
+    AssignNames(~A, ["y2"]);
+    AssignNames(~B, ["y1"]);
+    AssignNames(~C, ["x"]);
+    
     //Constructs an isomorphism K -> K that puts the variables into standard form
     phi := hom<fieldList[#fieldList] -> K | Evaluate(new_ys[1], Reverse(varList))>;
-
     for i in [1 .. #fieldList-1] do
         evalu := Evaluate(new_ys[i+1], [0 : j in [1 .. #fieldList - i]] cat [Reverse(varList)[k] : k in [#fieldList-i+1 .. #fieldList+1]]);
         phi := hom<fieldList[#fieldList-i] -> K | phi, Reverse(varList)[#fieldList-i] + phi(evalu)>;
     end for;
     
     //Sets initial list and bound lists and computes the bases of Riemann Roch spaces and differential spaces needed
-    
+
     initList := [0 : i in [1 .. n+1]];
     
     boundList := [p-1 : i in [1 .. n+1]];
@@ -727,7 +861,7 @@ computeH1dR := function(K,d,n,f)
     boundList[1] := -N-1;
 
     O12 := computeO12(n, initList, N, boundList, p, varList, dList);
-    
+
     //Computes Frobenius on H1 of the structure sheaf. Applies the isomorphism and raises basis element to the pth power
     //then computes what the linear combination of elements of H1 of f^p is.
     FHN := [];
@@ -738,9 +872,9 @@ computeH1dR := function(K,d,n,f)
         for i in [1 .. #F] do
             if not F[i] in P then
                 ind := Index(H1R, F[i]);
-                if ind ne 0 then
-                    L[ind] := C[i];
-                end if;
+
+                L[ind] := C[i];
+
             end if;
         end for;
         Append(~FHN,L);
@@ -903,7 +1037,7 @@ computeH1dR := function(K,d,n,f)
     FON := Matrix(k, FON);
     VHN := Matrix(k, VHN);
     VON := Matrix(k, VON);
-    
+
     //Constructs Frobenius and Cartier matrices of size 2g x 2g
     F := VerticalJoin(HorizontalJoin(FHN, FON), ZeroMatrix(k, #H1R, 2*#H1R));
 
@@ -912,6 +1046,6 @@ computeH1dR := function(K,d,n,f)
     M := RModule(MatrixRing<k,2*#H1R | F,V>);
     //K`H1deRham := M;
     B := [*O, HyperClasses*];
-    return Dimension(NullSpace(F*V)), Dimension(NullSpace(V*F));
+    return F,V;
 end function;
 
