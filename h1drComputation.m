@@ -317,7 +317,7 @@ d : List of ramification invariants for levels 1 to n
 computeP2 := function(n,L,N,B,p,V,d)
     F := [];
     
-    while L neq B do
+    while L ne B do
     
         vanishing := p^n*L[1];
         for i in [1 .. #L-1] do
