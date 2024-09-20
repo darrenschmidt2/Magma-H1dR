@@ -212,47 +212,44 @@ p : prime
 V : List of variables [x,y1,...,yn]
 d : List of ramification invariants for levels 1 to n
 */
-computeH1R := function(n,L,N,F,B,p,V,d)
+computeH1R := function(n,L,N,B,p,V,d)
+    F := [];
+    while L ne B do
     
-    //Computes order of vanishing of function at infinity
-    vanishing := p^n*L[1];
-    for i in [1 .. #L-1] do
-        vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
-    end for;
-    
-    //If this is true, function is a basis element. Append it to the list of functions F
-    if vanishing gt 0 and vanishing le N*p^(n) then
-        func := 1;
-        for i in [1 .. n+1] do
-            func := func * V[i]^L[i];
+        //Computes order of vanishing of function at infinity
+        vanishing := p^n*L[1];
+        for i in [1 .. #L-1] do
+            vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
         end for;
 
-        Append(~F,func);
-    end if;
-    
-    //Ends if bounds are met, otherwise, keeps increasing the exponents
-    if L eq B then
-        return F;
-    end if;
-    
-    //Loops through all possible exponents up to their bounds
-    if L[1] eq B[1] then
-        L[1] := -N;
-    
-        for i in [2 .. #L] do
-            if L[i] eq B[i] then
-                L[i] := 0;
-            else
-                L[i] := L[i] + 1;
-                break;
-            end if;
-        end for;
-    else
-        L[1] := L[1] + 1;
-    end if;
+        //If this is true, function is a basis element. Append it to the list of functions F
+        if vanishing gt 0 and vanishing le N*p^(n) then
+            func := 1;
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
 
-    return $$(n,L,N,F,B,p,V,d);
+            Append(~F,func);
+        end if;
 
+        //Loops through all possible exponents up to their bounds
+        if L[1] eq B[1] then
+            L[1] := -N;
+
+            for i in [2 .. #L] do
+                if L[i] eq B[i] then
+                    L[i] := 0;
+                else
+                    L[i] := L[i] + 1;
+                    break;
+                end if;
+            end for;
+        else
+            L[1] := L[1] + 1;
+        end if;
+    end while;
+    
+    return F;
 end function;
 
 /* Computes functions of the form x^v y1^{a1} ... yn^{an} with order of vanishing at infinity
@@ -266,45 +263,43 @@ p : prime
 V : List of variables [x,y1,...,yn]
 d : List of ramification invariants for levels 1 to n
 */
-computeP1 := function(n,L,N,F,B,p,V,d)
+computeP1 := function(n,L,N,B,p,V,d)
+    F := [];
     
-    //Computes order of vanishing at infinity
-    vanishing := p^n*L[1];
-    for i in [1 .. #L-1] do
-        vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
-    end for;
-    
-    //If order of vanishing <= 0, add function to function list
-    if vanishing le 0 then
-        func := 1;
-        for i in [1 .. n+1] do
-            func := func * V[i]^L[i];
+    while L ne B do
+        //Computes order of vanishing at infinity
+        vanishing := p^n*L[1];
+        for i in [1 .. #L-1] do
+            vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
         end for;
 
-        Append(~F,func);
-    end if;
+        //If order of vanishing <= 0, add function to function list
+        if vanishing le 0 then
+            func := 1;
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+
+            Append(~F,func);
+        end if;
+
+        if L[1] eq B[1] then
+            L[1] := -N*p;
+
+            for i in [2 .. #L] do
+                if L[i] eq B[i] then
+                    L[i] := 0;
+                else
+                    L[i] := L[i] + 1;
+                    break;
+                end if;
+            end for;
+        else
+            L[1] := L[1] + 1;
+        end if;
+    end while;
     
-    //Loops through L to go through all possible exponents for each variable. Ends when L == B.
-    if L eq B then
-        return F;
-    end if;
-
-    if L[1] eq B[1] then
-        L[1] := -N*p;
-
-        for i in [2 .. #L] do
-            if L[i] eq B[i] then
-                L[i] := 0;
-            else
-                L[i] := L[i] + 1;
-                break;
-            end if;
-        end for;
-    else
-        L[1] := L[1] + 1;
-    end if;
-
-    return $$(n,L,N,F,B,p,V,d);
+    return F;
 
 end function;
 
@@ -319,42 +314,42 @@ p : prime
 V : List of variables [x,y1,...,yn]
 d : List of ramification invariants for levels 1 to n
 */
-computeP2 := function(n,L,N,F,B,p,V,d)
-
-    vanishing := p^n*L[1];
-    for i in [1 .. #L-1] do
-        vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
-    end for;
-
-    if vanishing le N*p^(n+1) then
-        func := 1;
-        for i in [1 .. n+1] do
-            func := func * V[i]^L[i];
+computeP2 := function(n,L,N,B,p,V,d)
+    F := [];
+    
+    while L neq B do
+    
+        vanishing := p^n*L[1];
+        for i in [1 .. #L-1] do
+            vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
         end for;
 
-        Append(~F,func);
-    end if;
+        if vanishing le N*p^(n+1) then
+            func := 1;
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
 
-    if L eq B then
-        return F;
-    end if;
+            Append(~F,func);
+        end if;
 
-    if L[1] eq B[1] then
-        L[1] := 0;
+        if L[1] eq B[1] then
+            L[1] := 0;
 
-        for i in [2 .. #L] do
-            if L[i] eq B[i] then
-                L[i] := 0;
-            else
-                L[i] := L[i] + 1;
-                break;
-            end if;
-        end for;
-    else
-        L[1] := L[1] + 1;
-    end if;
-
-    return $$(n,L,N,F,B,p,V,d);
+            for i in [2 .. #L] do
+                if L[i] eq B[i] then
+                    L[i] := 0;
+                else
+                    L[i] := L[i] + 1;
+                    break;
+                end if;
+            end for;
+        else
+            L[1] := L[1] + 1;
+        end if;
+    end while;
+    
+    return F;
 
 end function;
 
@@ -369,42 +364,40 @@ p : prime
 V : List of variables [x,y1,...,yn]
 d : List of ramification invariants for levels 1 to n
 */
-computeP12 := function(n,L,N,F,B,p,V,d)
-
-    vanishing := p^n*L[1];
-    for i in [1 .. #L-1] do
-        vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
-    end for;
-
-    if vanishing le p^(n+1)*N then
-        func := 1;
-        for i in [1 .. n+1] do
-            func := func * V[i]^L[i];
+computeP12 := function(n,L,N,B,p,V,d)
+    F := [];
+    while L ne B do
+        vanishing := p^n*L[1];
+        for i in [1 .. #L-1] do
+            vanishing := vanishing + p^(n-i)*d[i]*L[i+1];
         end for;
 
-        Append(~F,func);
-    end if;
+        if vanishing le p^(n+1)*N then
+            func := 1;
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
 
-    if L eq B then
-        return F;
-    end if;
+            Append(~F,func);
+        end if;
 
-    if L[1] eq B[1] then
-        L[1] := -N*p;
+        if L[1] eq B[1] then
+            L[1] := -N*p;
 
-        for i in [2 .. #L] do
-            if L[i] eq B[i] then
-                L[i] := 0;
-            else
-                L[i] := L[i] + 1;
-                break;
-            end if;
-        end for;
-    else
-        L[1] := L[1] + 1;
-    end if;
-
-    return $$(n,L,N,F,B,p,V,d);
+            for i in [2 .. #L] do
+                if L[i] eq B[i] then
+                    L[i] := 0;
+                else
+                    L[i] := L[i] + 1;
+                    break;
+                end if;
+            end for;
+        else
+            L[1] := L[1] + 1;
+        end if;
+        
+    end while;
+    return F;
 
 end function;
 
@@ -417,39 +410,39 @@ p : prime
 V : List of variables [x,y1,...,yn]
 d : List of ramification invariants for levels 1 to n
 */
-computeO := function(n,L,F,B,p,V,d)
+computeO := function(n,L,B,p,V,d)
+    F := [];
     
+    while L ne B do
     
-    rhs := -p^n-1;
-    for i in [1 .. n] do
-        rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
-    end for;
-
-    /*Madden's paper shows basis elements are x^L[1]*y1^L[2]*...yn^L[n+1]
-    with p^n*L[1] <= rhs from above*/
-    while p^n*L[1] le rhs do
-        func := Differential(V[1]);
-        for i in [1 .. n+1] do
-            func := func * V[i]^L[i];
+        rhs := -p^n-1;
+        for i in [1 .. n] do
+            rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
         end for;
-        Append(~F, func);
-        L[1] := L[1] + 1;
+
+        /*Madden's paper shows basis elements are x^L[1]*y1^L[2]*...yn^L[n+1]
+        with p^n*L[1] <= rhs from above*/
+        while p^n*L[1] le rhs do
+            func := Differential(V[1]);
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+            Append(~F, func);
+            L[1] := L[1] + 1;
+        end while;
+        L[1] := 0;
+
+        for i in [2 .. #L] do
+            if L[i] eq B[i] then
+                L[i] := 0;
+            else
+                L[i] := L[i] + 1;
+                break;
+            end if;
+        end for;
+        
     end while;
-    L[1] := 0;
-
-    if L eq B then
-        return F;
-    end if;
-
-    for i in [2 .. #L] do
-        if L[i] eq B[i] then
-            L[i] := 0;
-        else
-            L[i] := L[i] + 1;
-            break;
-        end if;
-    end for;
-    return $$(n,L,F,B,p,V,d);
+    return F;
 
 end function;
 
@@ -465,37 +458,36 @@ p : prime
 V : List of variables [x,y1,...,yn]
 d : List of ramification invariants for levels 1 to n
 */
-computeO1 := function(n,L,N,F,B,p,V,d)
-
-    rhs := -p^n-1;
-    for i in [1 .. n] do
-        rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
-    end for;
-
-    while p^n*L[1] le rhs do
-        func := Differential(V[1]);
-        for i in [1 .. n+1] do
-            func := func * V[i]^L[i];
+computeO1 := function(n,L,N,B,p,V,d)
+    F := [];
+    
+    while L ne B do
+        rhs := -p^n-1;
+        for i in [1 .. n] do
+            rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
         end for;
-        Append(~F, func);
-        L[1] := L[1] + 1;
+
+        while p^n*L[1] le rhs do
+            func := Differential(V[1]);
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+            Append(~F, func);
+            L[1] := L[1] + 1;
+        end while;
+        L[1] := -N-1;
+
+        for i in [2 .. #L] do
+            if L[i] eq B[i] then
+                L[i] := 0;
+            else
+                L[i] := L[i] + 1;
+                break;
+            end if;
+        end for;
     end while;
-    L[1] := -N-1;
 
-    if L eq B then
-        return F;
-    end if;
-
-    for i in [2 .. #L] do
-        if L[i] eq B[i] then
-            L[i] := 0;
-        else
-            L[i] := L[i] + 1;
-            break;
-        end if;
-    end for;
-
-    return $$(n,L,N,F,B,p,V,d);
+    return F;
 
 end function;
 
@@ -511,37 +503,36 @@ p : prime
 V : List of variables [x,y1,...,yn]
 d : List of ramification invariants for levels 1 to n
 */
-computeO2 := function(n,L,N,F,B,p,V,d)
-
-    rhs := -p^n-1+p^n*(N+1);
-    for i in [1 .. n] do
-        rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
-    end for;
+computeO2 := function(n,L,N,B,p,V,d)
+    F := [];
     
-    while p^n*L[1] le rhs do
-        func := Differential(V[1]);
-        for i in [1 .. n+1] do
-            func := func * V[i]^L[i];
+    while L ne B do
+        rhs := -p^n-1+p^n*(N+1);
+        for i in [1 .. n] do
+            rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
         end for;
-        Append(~F, func);
-        L[1] := L[1] + 1;
+
+        while p^n*L[1] le rhs do
+            func := Differential(V[1]);
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+            Append(~F, func);
+            L[1] := L[1] + 1;
+        end while;
+        L[1] := 0;
+
+        for i in [2 .. #L] do
+            if L[i] eq B[i] then
+                L[i] := 0;
+            else
+                L[i] := L[i] + 1;
+                break;
+            end if;
+        end for;
     end while;
-    L[1] := 0;
 
-    if L eq B then
-        return F;
-    end if;
-
-    for i in [2 .. #L] do
-        if L[i] eq B[i] then
-            L[i] := 0;
-        else
-            L[i] := L[i] + 1;
-            break;
-        end if;
-    end for;
-
-    return $$(n,L,N,F,B,p,V,d);
+    return F;
 
 end function;
 
@@ -557,37 +548,36 @@ p : prime
 V : List of variables [x,y1,...,yn]
 d : List of ramification invariants for levels 1 to n
 */
-computeO12 := function(n,L,N,F,B,p,V,d)
-
-    rhs := -p^n-1+p^n*(N+1);
-    for i in [1 .. n] do
-        rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
-    end for;
-
-    while p^n*L[1] le rhs do
-        func := Differential(V[1]);
-        for i in [1 .. n+1] do
-            func := func * V[i]^L[i];
+computeO12 := function(n,L,N,B,p,V,d)
+    F := [];
+    
+    while L ne B do
+        rhs := -p^n-1+p^n*(N+1);
+        for i in [1 .. n] do
+            rhs := rhs + (p-1)*p^(n-i)*d[i] - p^(n-i)*d[i]*L[i+1];
         end for;
-        Append(~F, func);
-        L[1] := L[1] + 1;
+
+        while p^n*L[1] le rhs do
+            func := Differential(V[1]);
+            for i in [1 .. n+1] do
+                func := func * V[i]^L[i];
+            end for;
+            Append(~F, func);
+            L[1] := L[1] + 1;
+        end while;
+        L[1] := -N-1;
+
+        for i in [2 .. #L] do
+            if L[i] eq B[i] then
+                L[i] := 0;
+            else
+                L[i] := L[i] + 1;
+                break;
+            end if;
+        end for;
     end while;
-    L[1] := -N-1;
 
-    if L eq B then
-        return F;
-    end if;
-
-    for i in [2 .. #L] do
-        if L[i] eq B[i] then
-            L[i] := 0;
-        else
-            L[i] := L[i] + 1;
-            break;
-        end if;
-    end for;
-
-    return $$(n,L,N,F,B,p,V,d);
+    return F;
 
 end function;
 
@@ -702,41 +692,41 @@ computeH1dR := function(K,d,n,f)
     initList[1] := -N;
     boundList[1] := -1;
     
-    H1R := computeH1R(n, initList, N, [], boundList, p, varList, dList);
+    H1R := computeH1R(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := -N*p;
     boundList[1] := 0;
     
-    P1 := computeP1(n, initList, N, [], boundList, p, varList, dList);
+    P1 := computeP1(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := 0;
     boundList[1] := N*p;
     
-    P2:= computeP2(n, initList, N, [], boundList, p, varList, dList);
+    P2:= computeP2(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := -N*p;
     
-    P12 := computeP12(n, initList, N, [], boundList, p, varList, dList);
+    P12 := computeP12(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := 0;
     boundList[1] := 0;
     
-    O := computeO(n, initList, [], boundList, p, varList, dList);
+    O := computeO(n, initList, boundList, p, varList, dList);
     
     initList[1] := -N-1;
     boundList[1] := -N-1;
     
-    O1 := computeO1(n, initList, N, [], boundList, p, varList, dList);
+    O1 := computeO1(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := 0;
     boundList[1] := 0;
     
-    O2 := computeO2(n, initList, N, [], boundList, p, varList, dList);
+    O2 := computeO2(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := -N-1;
     boundList[1] := -N-1;
 
-    O12 := computeO12(n, initList, N, [], boundList, p, varList, dList);
+    O12 := computeO12(n, initList, N, boundList, p, varList, dList);
     
     //Computes Frobenius on H1 of the structure sheaf. Applies the isomorphism and raises basis element to the pth power
     //then computes what the linear combination of elements of H1 of f^p is.
