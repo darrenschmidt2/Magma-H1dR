@@ -604,16 +604,16 @@ computeH1dR := function(K,d,n,f)
     
     F := PolynomialRing(k,n+1);
     
-    epols:=etapols(p,n-1); //characteristic p, length n
-    
     //Witt vector computations don't function correctly for n = 1
     if n eq 1 then
 		a1 := F.1;
         t := F.2;
         ys := [a1];
+        yp := [a1^p];
         AssignNames(~F,[ "a" cat IntegerToString(j) : j in [n..1 by -1]] cat ["t"]);
 		ASW:=[a1^p -a1];
 	else
+        epols:=etapols(p,n-1); //characteristic p, length n
         t := F.(n+1);
         ys := [];
 	
@@ -633,12 +633,13 @@ computeH1dR := function(K,d,n,f)
     //Adds up the witt vectors that are the monomials of f.
     v := [0 : j in [1 .. n]];
     v[1] := xs[1];
-    
-    for i in [1 .. #xs-1] do
-        b := [F!0 : j in [1 .. n]];
-        b[1] := xs[i+1]*t^i;
-        v := WittSum(v,b : pols := epols);
-    end for;
+    if n ne 1 then
+        for i in [1 .. #xs-1] do
+            b := [F!0 : j in [1 .. n]];
+            b[1] := xs[i+1]*t^i;
+            v := WittSum(v,b : pols := epols);
+        end for;
+    end if;
     
     //Creates functions using Artin-Schreier-Witt theory with yi^p-yi=fs[i]
     fs := [yp[i] - ys[i] - ASW[i] + v[i] : i in [1 .. #ASW]];
@@ -677,7 +678,11 @@ computeH1dR := function(K,d,n,f)
     end if;
     
     //List of variables in the tower in Madden's standard form
-    new_ys := normalize_ASW(p, n, F, dList, t, ys, fs);
+    if n ne 1 then
+        new_ys := normalize_ASW(p, n, F, dList, t, ys, fs);
+    else
+        new_ys := ys;
+    end if;
     
     //Constructs an isomorphism K -> K that puts the variables into standard form
     phi := hom<fieldList[#fieldList] -> K | Evaluate(new_ys[1], Reverse(varList))>;
@@ -733,13 +738,12 @@ computeH1dR := function(K,d,n,f)
 
     O12 := computeO12(n, initList, N, [], boundList, p, varList, dList);
     
-    
     //Computes Frobenius on H1 of the structure sheaf. Applies the isomorphism and raises basis element to the pth power
     //then computes what the linear combination of elements of H1 of f^p is.
     FHN := [];
     P := P1 cat P2;
     for f in H1R do    
-        F,C := decompFunc(phi(f)^p,p,varList,R);
+        F,C := decompFunc(Inverse(phi)(phi(f)^p),p,varList,R);
         L := [0 : j in [1 .. #H1R]];
         for i in [1 .. #F] do
             if not F[i] in P then
@@ -757,7 +761,7 @@ computeH1dR := function(K,d,n,f)
     
     for w in O do
         vw := Cartier(phi(w/dx)*dx);
-        vw := vw / dx;
+        vw := Inverse(phi)(vw / dx);
         F,C := decompFunc(vw,p,varList,R);
         L := [0 : j in [1 .. #O]];
         for i in [1 .. #F] do
@@ -800,8 +804,8 @@ computeH1dR := function(K,d,n,f)
     for f in H1R do
         //Computes what df is in O12/O2, then finds u in O1 such that u = df in O12/O2
         //Then v = df-u.
-        df := Differential(phi(f));
-        df := df/dx;
+        df := Differential(phi(f)) / dx;
+        df := Inverse(phi)(df);
         F,C := decompFunc(df, p, varList,R);
         uvec := [0 : j in [1 .. #O12q]];
         for i in [1 .. #F] do
@@ -817,7 +821,7 @@ computeH1dR := function(K,d,n,f)
         v := df*dx - u;
         Append(~HyperClasses,<f,u,v>);
     end for;
-    
+
     //Basis of P12/P2
     P12q := [];
     for func in P12 do
@@ -848,7 +852,7 @@ computeH1dR := function(K,d,n,f)
         f := HyperClasses[i][1];
         
         //F(f_i, u_i, v_i) - Sum_j FHN[i,j]*(f_j , u_j, v_j) projects to 0 in H1 of structure sheaf
-        Frobf := phi(f)^p - &+[FHN[i,j]*HyperClasses[j][1] : j in [1 .. #H1R]];
+        Frobf := Inverse(phi)(phi(f)^p) - &+[FHN[i,j]*HyperClasses[j][1] : j in [1 .. #H1R]];
         vector := [0 : k in [1 .. #P12q]];
         
         //Computes what Frobf is in P12/P2.
@@ -870,7 +874,7 @@ computeH1dR := function(K,d,n,f)
         
         //eta cancels out the -&+[FHN[i,j]*HyperClasses[j][1] : j in [1 .. #H1R]]
         eta := - &+[FHN[i,j]*HyperClasses[j][2]: j in [1 .. #H1R]];
-        differential := eta - Differential(u);
+        differential := eta - Inverse(phi)(Differential(phi(u))/dx)*dx;
         differential := differential / dx;
         
         //Then computes the linear combination of basis elements of differentials
@@ -892,7 +896,7 @@ computeH1dR := function(K,d,n,f)
     for i in [1 .. #H1R] do
         u := phi(HyperClasses[i][2]/dx)*dx;
         Vu := Cartier(u);
-        Vu := Vu / dx;
+        Vu := Inverse(phi)(Vu / dx);
         
         F,C := decompFunc(Vu, p, varList,R);
         L := [0 : k in [1 .. #O]];
@@ -917,7 +921,7 @@ computeH1dR := function(K,d,n,f)
 
     M := RModule(MatrixRing<k,2*#H1R | F,V>);
     //K`H1deRham := M;
-    //B := [*O, HyperClasses*];
-    return Dimension(NullSpace(F) meet NullSpace(V));
+    B := [*O, HyperClasses*];
+    return Dimension(NullSpace(F*V)), Dimension(NullSpace(V*F));
 end function;
 
