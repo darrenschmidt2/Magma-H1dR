@@ -798,24 +798,6 @@ computeH1dR := function(p,r,d,n,f)
     K := fieldList[n];
     varList := [K!x] cat varList;
     
-    /*
-    //Gets a list of all the generators of the function fields of the towers
-    fieldList := [K];
-    L := K;
-    for i := 1 to n-1 do
-        L := BaseField(L);
-        Append(~fieldList,L);
-    end for;
-    
-    
-    //Constructs list of variables [x,y1,...,yn].
-    varList := [K!0 : i in [1 .. n+1]];
-    varList[1] := K!R.1;
-    
-    for i := 2 to n+1 do
-        varList[i] := K!(fieldList[i].1);
-    end for;
-    */
     x := varList[1];
     dx := Differential(x);
     
@@ -824,15 +806,6 @@ computeH1dR := function(p,r,d,n,f)
     
     
     N := Ceiling(2*g/p^n);
-    
-    /*
-    //Constructs an isomorphism K -> K that puts the variables into standard form
-    phi := hom<fieldList[#fieldList] -> K | Evaluate(new_ys[1], Reverse(varList))>;
-    for i in [1 .. #fieldList-1] do
-        evalu := Evaluate(new_ys[i+1], [0 : j in [1 .. #fieldList - i]] cat [Reverse(varList)[k] : k in [#fieldList-i+1 .. #fieldList+1]]);
-        phi := hom<fieldList[#fieldList-i] -> K | phi, Reverse(varList)[#fieldList-i] + phi(evalu)>;
-    end for;
-    */
     
     //Sets initial list and bound lists and computes the bases of Riemann Roch spaces and differential spaces needed
 
