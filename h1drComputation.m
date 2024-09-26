@@ -111,7 +111,6 @@ function normalize_ASW(p,n,P,ds,x,ys,fs)
 		//such that fs[level] + y_mod^p - y_mod is in standard form
 		new_f,new_u,y_mod :=normalize_ASW_level(p,n,ds,x,ys,fs[level],leadingterms,simplify,level);
         
-        Append(~yList, ys[level] + y_mod);
 		Append(~standard_f,new_f);
 		
 		//update leading terms for next level
@@ -145,8 +144,8 @@ function normalize_ASW(p,n,P,ds,x,ys,fs)
 			fs[j]  := lift(fsj_alt);
 		end for;
 	end for;
-	
-	return yList;	
+
+	return standard_f;	
 end function;
 
 /*Decompose a function in x,y1,...,yn into its monomials
@@ -707,11 +706,9 @@ d : Ramification invariant of the first level of the tower
 n : level of the tower
 f : polynomial such that y1^p-y1 = f
 */
-computeH1dR := function(K,d,n,f)
-    p := Characteristic(K);
-    k := ConstantField(K);
-    R := PolynomialRing(k);
-    
+computeH1dR := function(p,r,d,n,f)
+    k := GF(p^r);
+    R<x> := PolynomialRing(k);
     F := PolynomialRing(k,n+1);
     
     //Witt vector computations don't function correctly for n = 1
@@ -736,24 +733,72 @@ computeH1dR := function(K,d,n,f)
         yp := [ys[i]^p : i in [1..n]];
         ASW:= WittDiff(yp,ys : pols:=epols);
     end if;
-    
+
     //Break up the terms in the polynomial f.
     xs := Eltseq(f);
     
     //Adds up the witt vectors that are the monomials of f.
-    v := [0 : j in [1 .. n]];
-    v[1] := xs[1];
+    v := [F!0 : j in [1 .. n]];
+    
     if n ne 1 then
+        v[1] := xs[1];
         for i in [1 .. #xs-1] do
             b := [F!0 : j in [1 .. n]];
             b[1] := xs[i+1]*t^i;
             v := WittSum(v,b : pols := epols);
         end for;
+    else
+        v[1] := Evaluate(f,t);
     end if;
     
     //Creates functions using Artin-Schreier-Witt theory with yi^p-yi=fs[i]
     fs := [yp[i] - ys[i] - ASW[i] + v[i] : i in [1 .. #ASW]];
+
+    //Computes ramification invariants up to level n of the tower
+    dList := [d];
+    if n gt 1 then
+        for i := 2 to n do
+            Append(~dList, d*(p^(2*i-1)+1)/(p+1));
+        end for;
+    end if;
+
+    //List of variables in the tower in Madden's standard form
+    if n ne 1 then
+        new_fs := normalize_ASW(p, n, F, dList, t, ys, fs);
+    else
+        new_fs := fs;
+    end if;
+
+    fieldList := [];
+    varList := [];
+    for i in [1 .. n] do
+
+        if i eq 1 then
+            L := FieldOfFractions(R);
+        else
+            L := fieldList[i-1];   
+        end if;
+        A := PolynomialRing(L);
+        evalList := [0 : j in [1 .. (n+1)-i]] cat Reverse(varList) cat [x];
+
+        g := A.1^p - A.1 - A!(Evaluate(F!new_fs[i], evalList));
+
+        E := ext<L | g>;
+        for j in [1 .. #varList] do 
+            varList[j] := E!varList[j];
+        end for;
+
+        if i ne 1 then
+            varList := ChangeUniverse(varList,E);
+        end if;
+        Append(~fieldList, E);
+        Append(~varList, E.1);
+    end for;
     
+    K := fieldList[n];
+    varList := [K!x] cat varList;
+    
+    /*
     //Gets a list of all the generators of the function fields of the towers
     fieldList := [K];
     L := K;
@@ -762,14 +807,15 @@ computeH1dR := function(K,d,n,f)
         Append(~fieldList,L);
     end for;
     
+    
     //Constructs list of variables [x,y1,...,yn].
     varList := [K!0 : i in [1 .. n+1]];
-    varList[1] := K!PolynomialRing(k).1;
+    varList[1] := K!R.1;
     
-    for i := 0 to n-1 do
-        varList[n+1-i] := K!(fieldList[i+1].1);
+    for i := 2 to n+1 do
+        varList[i] := K!(fieldList[i].1);
     end for;
-
+    */
     x := varList[1];
     dx := Differential(x);
     
@@ -779,42 +825,14 @@ computeH1dR := function(K,d,n,f)
     
     N := Ceiling(2*g/p^n);
     
-    //Computes ramification invariants up to level n of the tower
-    dList := [d];
-    if n gt 1 then
-        for i := 2 to n do
-            Append(~dList, d*(p^(2*i-1)+1)/(p+1));
-        end for;
-    end if;
-    
-    //List of variables in the tower in Madden's standard form
-    if n ne 1 then
-        new_ys := normalize_ASW(p, n, F, dList, t, ys, fs);
-    else
-        new_ys := ys;
-    end if;
-    
-    y4 := K.1;
-    L := BaseField(K);
-    y3 := K!(L.1);
-    A := BaseField(L);
-    y2 := K!(A.1);
-    B := BaseField(A);
-    y1 := K!(B.1);
-    C := BaseField(B);
-    x := K!(C.1);
-    AssignNames(~K, ["y4"]);
-    AssignNames(~L, ["y3"]);
-    AssignNames(~A, ["y2"]);
-    AssignNames(~B, ["y1"]);
-    AssignNames(~C, ["x"]);
-    
+    /*
     //Constructs an isomorphism K -> K that puts the variables into standard form
     phi := hom<fieldList[#fieldList] -> K | Evaluate(new_ys[1], Reverse(varList))>;
     for i in [1 .. #fieldList-1] do
         evalu := Evaluate(new_ys[i+1], [0 : j in [1 .. #fieldList - i]] cat [Reverse(varList)[k] : k in [#fieldList-i+1 .. #fieldList+1]]);
         phi := hom<fieldList[#fieldList-i] -> K | phi, Reverse(varList)[#fieldList-i] + phi(evalu)>;
     end for;
+    */
     
     //Sets initial list and bound lists and computes the bases of Riemann Roch spaces and differential spaces needed
 
@@ -867,7 +885,7 @@ computeH1dR := function(K,d,n,f)
     FHN := [];
     P := P1 cat P2;
     for f in H1R do    
-        F,C := decompFunc(Inverse(phi)(phi(f)^p),p,varList,R);
+        F,C := decompFunc(f^p,p,varList,R);
         L := [0 : j in [1 .. #H1R]];
         for i in [1 .. #F] do
             if not F[i] in P then
@@ -884,8 +902,7 @@ computeH1dR := function(K,d,n,f)
     VHN := [];
     
     for w in O do
-        vw := Cartier(phi(w/dx)*dx);
-        vw := Inverse(phi)(vw / dx);
+        vw := Cartier(w) / dx;
         F,C := decompFunc(vw,p,varList,R);
         L := [0 : j in [1 .. #O]];
         for i in [1 .. #F] do
@@ -928,8 +945,7 @@ computeH1dR := function(K,d,n,f)
     for f in H1R do
         //Computes what df is in O12/O2, then finds u in O1 such that u = df in O12/O2
         //Then v = df-u.
-        df := Differential(phi(f)) / dx;
-        df := Inverse(phi)(df);
+        df := Differential(f) / dx;
         F,C := decompFunc(df, p, varList,R);
         uvec := [0 : j in [1 .. #O12q]];
         for i in [1 .. #F] do
@@ -976,7 +992,7 @@ computeH1dR := function(K,d,n,f)
         f := HyperClasses[i][1];
         
         //F(f_i, u_i, v_i) - Sum_j FHN[i,j]*(f_j , u_j, v_j) projects to 0 in H1 of structure sheaf
-        Frobf := Inverse(phi)(phi(f)^p) - &+[FHN[i,j]*HyperClasses[j][1] : j in [1 .. #H1R]];
+        Frobf := f^p - &+[FHN[i,j]*HyperClasses[j][1] : j in [1 .. #H1R]];
         vector := [0 : k in [1 .. #P12q]];
         
         //Computes what Frobf is in P12/P2.
@@ -998,7 +1014,7 @@ computeH1dR := function(K,d,n,f)
         
         //eta cancels out the -&+[FHN[i,j]*HyperClasses[j][1] : j in [1 .. #H1R]]
         eta := - &+[FHN[i,j]*HyperClasses[j][2]: j in [1 .. #H1R]];
-        differential := eta - Inverse(phi)(Differential(phi(u))/dx)*dx;
+        differential := eta - Differential(u);
         differential := differential / dx;
         
         //Then computes the linear combination of basis elements of differentials
@@ -1018,9 +1034,8 @@ computeH1dR := function(K,d,n,f)
     
     //Computes Cartier Operator on H1 deRham
     for i in [1 .. #H1R] do
-        u := phi(HyperClasses[i][2]/dx)*dx;
-        Vu := Cartier(u);
-        Vu := Inverse(phi)(Vu / dx);
+        u := HyperClasses[i][2];
+        Vu := Cartier(u) / dx;
         
         F,C := decompFunc(Vu, p, varList,R);
         L := [0 : k in [1 .. #O]];
