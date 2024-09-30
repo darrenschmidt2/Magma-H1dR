@@ -700,6 +700,37 @@ computeO12 := function(n,L,N,B,p,V,d)
 
 end function;
 
+computeCartier := function(f,R,p,x,A)
+    dx := Differential(x);
+    
+    F := Flat(f);
+        
+    for a in F do
+        if a ne 0 then
+            xTerm := a;
+                break;
+        end if;
+    end for;
+
+    xPower := Exponents(R!xTerm)[1];
+
+    k := Integers()!(Integers(p)!xPower);
+    n := Integers()!((xPower - k)/p);
+        
+    expression := f*x^(k-xPower);
+        
+    if #A ne 0 then
+        if IsDefined(A, expression) then
+            return A[expression] * x^n, A;
+        end if;
+    end if;
+    
+    cart := Cartier(expression*dx) / dx;
+    A[expression] := cart;
+    return cart*x^n, A;
+        
+end function;
+
 /*Computes H1 of deRham cohomology.
 K : Function Field of the curve
 d : Ramification invariant of the first level of the tower
@@ -804,7 +835,6 @@ computeH1dR := function(p,r,d,n,f)
     //Computes genus
     g := 0.5*(d/(p+1)*p^(2*n) - p^n - (p+1+d)/(p+1))+1;
     
-    
     N := Ceiling(2*g/p^n);
     
     //Sets initial list and bound lists and computes the bases of Riemann Roch spaces and differential spaces needed
@@ -870,12 +900,12 @@ computeH1dR := function(p,r,d,n,f)
         end for;
         Append(~FHN,L);
     end for;
-    
+
     //Computes matrix of Cartier operator on the regular differentials
     VHN := [];
-    
+    A := AssociativeArray();
     for w in O do
-        vw := Cartier(w) / dx;
+        vw, A := computeCartier(w/dx, R, p, x, A);
         F,C := decompFunc(vw,p,varList,R);
         L := [0 : j in [1 .. #O]];
         for i in [1 .. #F] do
@@ -1034,6 +1064,7 @@ computeH1dR := function(p,r,d,n,f)
     M := RModule(MatrixRing<k,2*#H1R | F,V>);
     //K`H1deRham := M;
     B := [*O, HyperClasses*];
-    return F,V;
+    B;
+    return M;
 end function;
 
