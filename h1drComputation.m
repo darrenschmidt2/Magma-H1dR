@@ -1064,7 +1064,6 @@ computeH1dR := function(p,r,d,n,f)
     M := RModule(MatrixRing<k,2*#H1R | F,V>);
     //K`H1deRham := M;
     B := [*O, HyperClasses*];
-    B;
     return M;
 end function;
 
