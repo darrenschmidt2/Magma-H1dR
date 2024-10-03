@@ -156,6 +156,7 @@ R : F_q[x]
 */
 decompFunc := function(f,p,V,R)
     //List of coefficients of f viewed as a polynomial in the y variables
+
     L := Flat(f);
     A := [];
     F := [];
@@ -835,7 +836,7 @@ d : Ramification invariant of the first level of the tower
 n : level of the tower
 f : polynomial such that y1^p-y1 = f
 */
-computeH1dR := function(p,r,d,n,f)
+computeH1dR := function(p,r,n,f)
     k := GF(p^r);
     R<x> := PolynomialRing(k);
     F := PolynomialRing(k,n+1);
@@ -884,6 +885,7 @@ computeH1dR := function(p,r,d,n,f)
     fs := [yp[i] - ys[i] - ASW[i] + v[i] : i in [1 .. #ASW]];
 
     //Computes ramification invariants up to level n of the tower
+    d := Degree(f);
     dList := [d];
     if n gt 1 then
         for i := 2 to n do
@@ -1026,7 +1028,7 @@ computeH1dR := function(p,r,d,n,f)
         end for;
         Append(~VHN,L);
     end for;
-
+    
     //Basis of quotient of O12 by O2
     O12q := [];
     degO12q := [];
@@ -1148,20 +1150,20 @@ computeH1dR := function(p,r,d,n,f)
         
         Append(~FON, L);   
     end for; 
-        
+    
     VON := [];
 
     //Computes Cartier Operator on H1 deRham
     for i in [1 .. #H1R] do
         u := HyperClasses[i][2];
         F,C, degF := decompFunc(u/dx, p, varList, R);
-        Vu := 0;
+        Vu := fieldList[#fieldList]!0;
         for j in [1 .. #F] do
             differential, A := computeCartier(degF[j], F[j], R, p, x ,A);
+
             Vu := Vu + Root(C[j],p)*differential;
         end for;
-        //Vu := Cartier(u) / dx;
-        
+
         F,C, degF := decompFunc(Vu, p, varList,R);
         L := [0 : k in [1 .. #O]];
         for j in [1 .. #F] do
@@ -1173,7 +1175,7 @@ computeH1dR := function(p,r,d,n,f)
         end for;
         Append(~VON, L);
     end for;
-
+    
     FHN := Matrix(k, FHN);
     FON := Matrix(k, FON);
     VHN := Matrix(k, VHN);
