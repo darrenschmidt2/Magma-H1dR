@@ -160,6 +160,7 @@ decompFunc := function(f,p,V,R)
     A := [];
     F := [];
     C := [];
+    degList := [];
     
     //Keeps track of the exponent for each y variable
     counter := [0 : i in [2 .. #V]];
@@ -187,17 +188,21 @@ decompFunc := function(f,p,V,R)
                 if A[j] ne 0 then
                     Append(~C, A[j]);
                     l := V[1]^(j-1)/V[1]^deg;
+
+                    degree := j-1 - deg;
                     for k in [1 .. #counter] do
                         l := l*V[k+1]^counter[k];
                     end for;
                     Append(~F, l);
+
+                    Append(~degList, [degree] cat counter);
                 end if;
             end for;
         end if;
     end for;
     
     //Returns functions and coefficients
-    return F,C;
+    return F,C,degList;
 end function;
 
 /*Computes a basis of H1 of sheaf cohomology of the structure sheaf
@@ -213,6 +218,7 @@ d : List of ramification invariants for levels 1 to n
 */
 computeH1R := function(n,L,N,B,p,V,d)
     F := [];
+    degList := [];
     while L ne B do
 
         //Computes order of vanishing of function at infinity
@@ -229,6 +235,7 @@ computeH1R := function(n,L,N,B,p,V,d)
             end for;
 
             Append(~F,func);
+            Append(~degList, L);
         end if;
 
         //Loops through all possible exponents up to their bounds
@@ -262,9 +269,10 @@ computeH1R := function(n,L,N,B,p,V,d)
         end for;
 
         Append(~F,func);
+        Append(~degList, L);
         end if;
     
-    return F;
+    return F, degList;
 end function;
 
 /* Computes functions of the form x^v y1^{a1} ... yn^{an} with order of vanishing at infinity
@@ -280,6 +288,7 @@ d : List of ramification invariants for levels 1 to n
 */
 computeP1 := function(n,L,N,B,p,V,d)
     F := [];
+    degList := [];
     
     while L ne B do
         //Computes order of vanishing at infinity
@@ -296,6 +305,7 @@ computeP1 := function(n,L,N,B,p,V,d)
             end for;
 
             Append(~F,func);
+            Append(~degList, L);
         end if;
 
         if L[1] eq B[1] then
@@ -328,9 +338,10 @@ computeP1 := function(n,L,N,B,p,V,d)
             end for;
 
             Append(~F,func);
+            Append(~degList, L);
         end if;
     
-    return F;
+    return F, degList;
 
 end function;
 
@@ -347,6 +358,7 @@ d : List of ramification invariants for levels 1 to n
 */
 computeP2 := function(n,L,N,B,p,V,d)
     F := [];
+    degList := [];
     
     while L ne B do
     
@@ -362,6 +374,7 @@ computeP2 := function(n,L,N,B,p,V,d)
             end for;
 
             Append(~F,func);
+            Append(~degList, L);
         end if;
 
         if L[1] eq B[1] then
@@ -392,9 +405,10 @@ computeP2 := function(n,L,N,B,p,V,d)
             end for;
 
             Append(~F,func);
+            Append(~degList, L);
         end if;
     
-    return F;
+    return F, degList;
 
 end function;
 
@@ -411,6 +425,7 @@ d : List of ramification invariants for levels 1 to n
 */
 computeP12 := function(n,L,N,B,p,V,d)
     F := [];
+    degList := [];
     while L ne B do
         vanishing := p^n*L[1];
         for i in [1 .. #L-1] do
@@ -422,7 +437,7 @@ computeP12 := function(n,L,N,B,p,V,d)
             for i in [1 .. n+1] do
                 func := func * V[i]^L[i];
             end for;
-
+            Append(~degList, L);
             Append(~F,func);
         end if;
 
@@ -453,11 +468,11 @@ computeP12 := function(n,L,N,B,p,V,d)
             for i in [1 .. n+1] do
                 func := func * V[i]^L[i];
             end for;
-
+            Append(~degList,L);
             Append(~F,func);
         end if;
     
-    return F;
+    return F, degList;
 
 end function;
 
@@ -472,6 +487,7 @@ d : List of ramification invariants for levels 1 to n
 */
 computeO := function(n,L,B,p,V,d)
     F := [];
+    degList := [];
     
     while L ne B do
     
@@ -488,6 +504,7 @@ computeO := function(n,L,B,p,V,d)
                 func := func * V[i]^L[i];
             end for;
             Append(~F, func);
+            Append(~degList, L);
             L[1] := L[1] + 1;
         end while;
         L[1] := 0;
@@ -516,10 +533,11 @@ computeO := function(n,L,B,p,V,d)
                 func := func * V[i]^L[i];
             end for;
             Append(~F, func);
+            Append(~degList, L);
             L[1] := L[1] + 1;
         end while;
     
-    return F;
+    return F, degList;
 
 end function;
 
@@ -537,6 +555,7 @@ d : List of ramification invariants for levels 1 to n
 */
 computeO1 := function(n,L,N,B,p,V,d)
     F := [];
+    degList := [];
     
     while L ne B do
         rhs := -p^n-1;
@@ -550,6 +569,7 @@ computeO1 := function(n,L,N,B,p,V,d)
                 func := func * V[i]^L[i];
             end for;
             Append(~F, func);
+            Append(~degList, L);
             L[1] := L[1] + 1;
         end while;
         L[1] := -N-1;
@@ -575,10 +595,11 @@ computeO1 := function(n,L,N,B,p,V,d)
                 func := func * V[i]^L[i];
             end for;
             Append(~F, func);
+            Append(~degList, L);
             L[1] := L[1] + 1;
         end while;
 
-    return F;
+    return F, degList;
 
 end function;
 
@@ -596,6 +617,7 @@ d : List of ramification invariants for levels 1 to n
 */
 computeO2 := function(n,L,N,B,p,V,d)
     F := [];
+    degList := [];
     
     while L ne B do
         rhs := -p^n-1+p^n*(N+1);
@@ -609,6 +631,7 @@ computeO2 := function(n,L,N,B,p,V,d)
                 func := func * V[i]^L[i];
             end for;
             Append(~F, func);
+            Append(~degList, L);
             L[1] := L[1] + 1;
         end while;
         L[1] := 0;
@@ -634,10 +657,11 @@ computeO2 := function(n,L,N,B,p,V,d)
                 func := func * V[i]^L[i];
             end for;
             Append(~F, func);
+            Append(~degList, L);
             L[1] := L[1] + 1;
         end while;
 
-    return F;
+    return F, degList;
 
 end function;
 
@@ -655,6 +679,7 @@ d : List of ramification invariants for levels 1 to n
 */
 computeO12 := function(n,L,N,B,p,V,d)
     F := [];
+    degList := [];
     
     while L ne B do
         rhs := -p^n-1+p^n*(N+1);
@@ -668,6 +693,7 @@ computeO12 := function(n,L,N,B,p,V,d)
                 func := func * V[i]^L[i];
             end for;
             Append(~F, func);
+            Append(~degList, L);
             L[1] := L[1] + 1;
         end while;
         L[1] := -N-1;
@@ -693,10 +719,11 @@ computeO12 := function(n,L,N,B,p,V,d)
                 func := func * V[i]^L[i];
             end for;
             Append(~F, func);
+            Append(~degList, L);
             L[1] := L[1] + 1;
         end while;
 
-    return F;
+    return F, degList;
 
 end function;
 
@@ -729,6 +756,85 @@ computeCartier := function(f,R,p,x,A)
     A[expression] := cart;
     return cart*x^n, A;
         
+end function;
+
+binarySearch := function(L,L1,n,p)
+    /*coeffList1 := [0 : i in [1 .. n+1]];
+    
+    funcFlat := Flat(f);
+    
+    for i in [1 .. #funcFlat] do
+        if funcFlat[i] ne 0 then
+            coeffList1[1] := Degree(Numerator(funcFlat[i]))-Degree(Denominator(funcFlat[i]));
+            break;
+        end if;
+        //Iterates through y variable exponents
+        for j in [2 .. #coeffList1] do
+            if coeffList1[j] eq p-1 then
+                coeffList1[j] := 0;
+            else
+                coeffList1[j] := coeffList1[j] + 1;
+                break;
+            end if;
+        end for;
+    end for;
+    */
+    low := 1;
+    high := #L;
+    while low le high do
+        midpoint := Floor((low + high)/2);
+        L2 := L[midpoint];
+        /*flatList := Flat(g);
+        
+        coeffList2 := [0 : i in [1 .. n+1]];
+        
+        for i in [1 .. #flatList] do
+            if flatList[i] ne 0 then
+                coeffList2[1] := Degree(Numerator(flatList[i]))-Degree(Denominator(flatList[i]));
+                break;
+            end if;
+            //Iterates through y variable exponents
+            for j in [2 .. #coeffList2] do
+                if coeffList2[j] eq p-1 then
+                    coeffList2[j] := 0;
+                else
+                    coeffList2[j] := coeffList2[j] + 1;
+                    break;
+                end if;
+            end for;
+        end for;*/
+        
+        compare := -1;
+        
+        for i in [#L1 .. 1 by -1] do
+            if L1[i] gt L2[i] then
+                 compare := 2;
+                 break;
+            
+            
+            elif L1[i] lt L2[i] then
+                compare := 1;
+                break;
+            
+            else
+                compare := 0;
+            end if;
+        end for;
+        
+        if compare eq 0 then
+            return midpoint, true;
+        
+        elif compare eq 1 then
+            high := midpoint - 1;
+        else
+            low := midpoint + 1;
+        end if;
+            
+    end while;
+    
+    return -1, false;
+    
+    
 end function;
 
 /*Computes H1 of deRham cohomology.
@@ -846,93 +952,107 @@ computeH1dR := function(p,r,d,n,f)
     
     initList[1] := -N;
     boundList[1] := -1;
-    
-    H1R := computeH1R(n, initList, N, boundList, p, varList, dList);
+   
+    H1R, degH := computeH1R(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := -N*p;
     boundList[1] := 0;
-    
-    P1 := computeP1(n, initList, N, boundList, p, varList, dList);
+
+    P1, degP1 := computeP1(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := 0;
     boundList[1] := N*p;
     
-    P2:= computeP2(n, initList, N, boundList, p, varList, dList);
+    P2, degP2 := computeP2(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := -N*p;
     
-    P12 := computeP12(n, initList, N, boundList, p, varList, dList);
+    P12, degP12 := computeP12(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := 0;
     boundList[1] := 0;
     
-    O := computeO(n, initList, boundList, p, varList, dList);
+    O, degO := computeO(n, initList, boundList, p, varList, dList);
     
     initList[1] := -N-1;
     boundList[1] := -N-1;
     
-    O1 := computeO1(n, initList, N, boundList, p, varList, dList);
+    O1, degO1 := computeO1(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := 0;
     boundList[1] := 0;
     
-    O2 := computeO2(n, initList, N, boundList, p, varList, dList);
+    O2, degO2 := computeO2(n, initList, N, boundList, p, varList, dList);
     
     initList[1] := -N-1;
     boundList[1] := -N-1;
 
-    O12 := computeO12(n, initList, N, boundList, p, varList, dList);
+    O12, degO12 := computeO12(n, initList, N, boundList, p, varList, dList);
 
     //Computes Frobenius on H1 of the structure sheaf. Applies the isomorphism and raises basis element to the pth power
     //then computes what the linear combination of elements of H1 of f^p is.
     FHN := [];
-    P := P1 cat P2;
-    for f in H1R do    
-        F,C := decompFunc(f^p,p,varList,R);
+
+    for f in H1R do
+        F,C, degF := decompFunc(f^p,p,varList,R);
         L := [0 : j in [1 .. #H1R]];
         for i in [1 .. #F] do
-            if not F[i] in P then
-                ind := Index(H1R, F[i]);
+            if degF[i][1] lt 0 then
+                _, inList := binarySearch(degP1, degF[i], n,p);
+            else
+                _, inList := binarySearch(degP2, degF[i], n, p);
+            end if;
+
+            if not inList then
+
+                ind,_ := binarySearch(degH, degF[i],n,p);
 
                 L[ind] := C[i];
 
             end if;
         end for;
+
         Append(~FHN,L);
     end for;
+
+
 
     //Computes matrix of Cartier operator on the regular differentials
     VHN := [];
     A := AssociativeArray();
     for w in O do
         vw, A := computeCartier(w/dx, R, p, x, A);
-        F,C := decompFunc(vw,p,varList,R);
+        F,C,degF := decompFunc(vw,p,varList,R);
         L := [0 : j in [1 .. #O]];
         for i in [1 .. #F] do
-            ind := Index(O, F[i]*dx);
-            if ind ne 0 then
+            ind,_ := binarySearch(degO,degF[i],n,p); 
+
+            if ind ne -1 then
                 L[ind] := C[i];
             end if;
         end for;
         Append(~VHN,L);
     end for;
-    
+
     //Basis of quotient of O12 by O2
     O12q := [];
+    degO12q := [];
     HyperClasses := [];
-    for differential in O12 do
-        if not differential in O2 then
-            Append(~O12q, differential);
+    for i in [1 .. #O12] do
+        if not O12[i] in O2 then
+            Append(~O12q, O12[i]);
+            Append(~degO12q, degO12[i]);
         end if;
     end for;
     
     //Matrix of map of O1 into O12/O2.
     O1mat := [];
     
-    for w in O1 do
+    for i in [1 .. #O1] do
+        w := O1[i];
         L := [0 : j in [1 .. #O12q]];
-        ind := Index(O12q, w);
-        if ind ne 0 then
+        ind, _ := binarySearch(degO12q, degO1[i], n, p);
+        if ind ne -1 then
             L[ind] := 1;
         end if;
         Append(~O1mat,L);
@@ -949,11 +1069,11 @@ computeH1dR := function(p,r,d,n,f)
         //Computes what df is in O12/O2, then finds u in O1 such that u = df in O12/O2
         //Then v = df-u.
         df := Differential(f) / dx;
-        F,C := decompFunc(df, p, varList,R);
+        F,C, degF := decompFunc(df, p, varList,R);
         uvec := [0 : j in [1 .. #O12q]];
         for i in [1 .. #F] do
-            ind := Index(O12q, F[i]*dx);
-            if ind ne 0 then
+            ind,_ := binarySearch(degO12q, degF[i], n,p);
+            if ind ne -1 then
                 uvec[ind] := C[i];
             end if;
         end for;
@@ -967,19 +1087,21 @@ computeH1dR := function(p,r,d,n,f)
 
     //Basis of P12/P2
     P12q := [];
-    for func in P12 do
-        if not func in P2 then
-            Append(~P12q, func);
+    degP12q := [];
+    for i in [1 .. #P12] do
+        if not P12[i] in P2 then
+            Append(~P12q, P12[i]);
+            Append(~degP12q, degP12[i]);
         end if;
     end for;
 
     P1mat := [];
     
     //Constructs matrix of map of P1 into P12/P2
-    for f in P1 do
+    for i in [1 .. #P1] do
         L := [0 : j in [1 .. #P12q]];
-        ind := Index(P12q, f);
-        if ind ne 0 then
+        ind, _ := binarySearch(degP12q, degP1[i], n,p);
+        if ind ne -1 then
             L[ind] := 1;
         end if;
         Append(~P1mat,L);
@@ -999,10 +1121,11 @@ computeH1dR := function(p,r,d,n,f)
         vector := [0 : k in [1 .. #P12q]];
         
         //Computes what Frobf is in P12/P2.
-        F,C := decompFunc(Frobf, p, varList,R);
+        F,C, degF := decompFunc(Frobf, p, varList,R);
         for j in [1 .. #F] do
             ind := Index(P12q, F[j]);
-            if ind ne 0 then
+            ind, _ := binarySearch(degP12q, degF[j], n, p);
+            if ind ne -1 then
                 vector[ind] := C[j];
             end if;
         end for;
@@ -1021,11 +1144,11 @@ computeH1dR := function(p,r,d,n,f)
         differential := differential / dx;
         
         //Then computes the linear combination of basis elements of differentials
-        F,C := decompFunc(differential, p, varList,R);
+        F,C, degF := decompFunc(differential, p, varList,R);
         L := [0 : k in [1 .. #O]];
         for j in [1 .. #F] do
-            ind := Index(O, F[j]*dx);
-            if ind ne 0 then
+            ind, _ := binarySearch(degO, degF[j], n, p);
+            if ind ne -1 then
                 L[ind] := C[j];
             end if;
         end for;
@@ -1040,11 +1163,12 @@ computeH1dR := function(p,r,d,n,f)
         u := HyperClasses[i][2];
         Vu := Cartier(u) / dx;
         
-        F,C := decompFunc(Vu, p, varList,R);
+        F,C, degF := decompFunc(Vu, p, varList,R);
         L := [0 : k in [1 .. #O]];
         for j in [1 .. #F] do
             ind := Index(O, F[j]*dx);
-            if ind ne 0 then
+            ind, _ := binarySearch(degO, degF[j], n, p);
+            if ind ne -1 then
                 L[ind] := C[j];
             end if;
         end for;
