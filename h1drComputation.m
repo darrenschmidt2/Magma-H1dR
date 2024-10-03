@@ -727,25 +727,17 @@ computeO12 := function(n,L,N,B,p,V,d)
 
 end function;
 
-computeCartier := function(f,R,p,x,A)
+computeCartier := function(L,f,R,p,x,A)
     dx := Differential(x);
-    
-    F := Flat(f);
-        
-    for a in F do
-        if a ne 0 then
-            xTerm := a;
-                break;
-        end if;
-    end for;
 
-    xPower := Exponents(R!xTerm)[1];
+
+    xPower := L[1];
 
     k := Integers()!(Integers(p)!xPower);
     n := Integers()!((xPower - k)/p);
         
     expression := f*x^(k-xPower);
-        
+
     if #A ne 0 then
         if IsDefined(A, expression) then
             return A[expression] * x^n, A;
@@ -1020,15 +1012,16 @@ computeH1dR := function(p,r,d,n,f)
     //Computes matrix of Cartier operator on the regular differentials
     VHN := [];
     A := AssociativeArray();
-    for w in O do
-        vw, A := computeCartier(w/dx, R, p, x, A);
+    for i in [1 .. #O] do
+        w := O[i];
+        vw, A := computeCartier(degO[i], w/dx, R, p, x, A);
         F,C,degF := decompFunc(vw,p,varList,R);
         L := [0 : j in [1 .. #O]];
-        for i in [1 .. #F] do
-            ind,_ := binarySearch(degO,degF[i],n,p); 
+        for j in [1 .. #F] do
+            ind,_ := binarySearch(degO,degF[j],n,p); 
 
             if ind ne -1 then
-                L[ind] := C[i];
+                L[ind] := C[j];
             end if;
         end for;
         Append(~VHN,L);
@@ -1157,11 +1150,17 @@ computeH1dR := function(p,r,d,n,f)
     end for; 
         
     VON := [];
-    
+
     //Computes Cartier Operator on H1 deRham
     for i in [1 .. #H1R] do
         u := HyperClasses[i][2];
-        Vu := Cartier(u) / dx;
+        F,C, degF := decompFunc(u/dx, p, varList, R);
+        Vu := 0;
+        for j in [1 .. #F] do
+            differential, A := computeCartier(degF[j], F[j], R, p, x ,A);
+            Vu := Vu + Root(C[j],p)*differential;
+        end for;
+        //Vu := Cartier(u) / dx;
         
         F,C, degF := decompFunc(Vu, p, varList,R);
         L := [0 : k in [1 .. #O]];
