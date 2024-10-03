@@ -1,13 +1,20 @@
 Attach("EOTypeGroupNq.m");
 load "h1drComputation.m";
 
-computeU11 := function(p,r,d,n,f)
+computeU11 := function(p,r,n,f)
     
     uList := [];
     
-    for m in [1 .. n] do
+    if Degree(f) eq 1 then
+        Append(~uList, 0);
+        startVal := 2;
+    else
+        startVal := 1;
+    end if;
     
-        M := computeH1dR(p,r,d,m,f);
+    for m in [startVal .. n] do
+        
+        M := computeH1dR(p,r,m,f);
         
         Eo := EOType(M);
         R := EOToFVRelations(Eo);
