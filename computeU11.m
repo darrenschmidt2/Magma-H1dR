@@ -4,9 +4,11 @@ load "h1drComputation.m";
 computeU11 := function(p,r,n,f)
     
     uList := [];
+    sList := [];
     
     if Degree(f) eq 1 then
         Append(~uList, 0);
+	Append(~sList, 0);
         startVal := 2;
     else
         startVal := 1;
@@ -48,7 +50,7 @@ computeU11 := function(p,r,n,f)
                 if #relations[i][1] ge wordLength then
                     for k in [0 .. #relations[i][1]] do
                         if Subword(RotateWord(relations[i][1],k),#relations[i][1]-wordLength+1,wordLength) eq word then
-                            counting := counting + 1;
+                            counting := counting + mult[i];
                             break;
                         end if;
                     end for;
@@ -56,9 +58,10 @@ computeU11 := function(p,r,n,f)
             end for;
 
         end for;
+	Append(~sList, s11);
         u11 := s11 + counting;
         Append(~uList, u11);
     end for;
-    return uList;
+    return uList, sList;
 
 end function;
