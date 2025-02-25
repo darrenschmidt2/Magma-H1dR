@@ -2,7 +2,7 @@ load "h1drComputation.m";
 
 F<t> := PolynomialRing(GF(3));
 
-M := computeH1dR(3,1,1,t^2);
+M := computeH1dR(3,1,5,t^2);
 
 F := Action(M).1;
 V := Action(M).2;
