@@ -25,7 +25,7 @@ end procedure;
 //Starting with H1dR, repeatedly apply V until you get to 0, then apply F^(-1) until you get a repeated result, go back to V
 //and repeat. Constructs a filtration of the subspaces found by keeping track of basis elements. If dim H1dR = n, keep track
 //of a basis [b_1, ..., b_n]. Then the subspace with dimension 1 <= m <= n found has basis given by b_1, ... , b_m
-canonicalType := function(D)
+EOType := function(D)
     H1:=VectorSpace(D);
     basis := Basis(H1);
     dimList := [Dimension(D)];
