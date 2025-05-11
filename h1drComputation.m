@@ -791,42 +791,44 @@ end function;
 //varList: [x,y1,y2,...]
 //cartierDict: Dictionary starting the result of the Cartier operator on monomial differential forms.
 //A: Highest level of the tower
-computeCartier := function(funcList,df,p,varList,cartierDict,A)
-    
+computeCartier := function(funcList,df,p,varList,cartierDict,R,B,A,P)
+    x := varList[1];
+    df := P!df;
+
     //Breaks up differential into monomials.
     n := #varList;
     xDegrees := [];
     coefficients := [];
-
-    tempTerms := Terms(df);
-    monomials := Monomials(df);
+    //monomials := Monomials(df);
     terms := [];
-    
-    for i in [1 .. #tempTerms] do
-        coeffsTemp := Coefficients(tempTerms[i]);
-        xNumTerms := Terms(Numerator(coeffsTemp[1]));
-        xDenomTerms := Terms(Denominator(coeffsTemp[1]));
-        
-        while #xDenomTerms lt #xNumTerms do
-            Append(~xDenomTerms, xDenomTerms[1]);
-        end while;
+ 
+    tempTerms := Terms(df);
+
+        for term in tempTerms do
+            coeffList := Coefficients(term);
+            xTerm := R!coeffList[#coeffList];
+
+            xDegree := Degree(Denominator(xTerm));
             
-        
-        for j in [1 .. #xNumTerms] do
-            deg := Degree(xNumTerms[j]) - Degree(xDenomTerms[j]);
-            if deg ge 0 then
-                coeff := (xNumTerms[j]/xDenomTerms[j])/varList[1]^deg;
-            else
-                coeff := (xNumTerms[j]/xDenomTerms[j])*varList[1]^Abs(deg);
-            end if;
-            Append(~xDegrees, deg);
-            Append(~coefficients, Root(coeff,p));
-            Append(~terms, monomials[i]*(xNumTerms[j]/xDenomTerms[j])/coeff);
+            xPolyTerm := B!(xTerm*x^(xDegree));
+            coeffList := Coefficients(xPolyTerm);
+            
+
+            monomialList := Monomials(xPolyTerm);
+            for i in [1 .. #monomialList] do
+                if coeffList[i] ne 0 then
+                    dictTerm := P!(monomialList[i]*term/(xTerm* x^xDegree));
+                    xCoeff := Coefficients(dictTerm);
+                    deg := Degree(Numerator(xCoeff[#xCoeff])) - Degree(Denominator(xCoeff[#xCoeff]));
+                    Append(~xDegrees, deg);
+
+                    Append(~terms, dictTerm);
+                    Append(~coefficients, coeffList[i]);
+                end if;
+            end for;
         end for;
-
-    end for;
-
     
+ 
     cartierComp := 0;
 
     for i in [1 .. #terms] do
@@ -852,7 +854,7 @@ computeCartier := function(funcList,df,p,varList,cartierDict,A)
             for j in [#exponents .. 2 by -1] do
                 if modList[j] ne 0 then
 
-                    cartier := &+[varList[j]^l*Binomial(modList[j],l)*$$(funcList, A!(expression/(varList[j]^modList[j])*(-funcList[j-1])^(modList[j]-l)),p,varList,cartierDict,A) : l in [0 .. modList[j]]];
+                    cartier := &+[varList[j]^l*Binomial(modList[j],l)*$$(funcList, A!(expression/(varList[j]^modList[j])*(-funcList[j-1])^(modList[j]-l)),p,varList,cartierDict,R,B,A,P) : l in [0 .. modList[j]]];
                     cartierDict[expression] := cartier;
                     cartierComp := cartierComp + coefficients[i]*cartier * newExpression;
                     break;
@@ -1093,14 +1095,16 @@ computeH1dR := function(p,r,n,f)
             monomialList := Monomials(xPolyTerm);
             for i in [1 .. #monomialList] do
                 dictTerm := monomialList[i]*term/(xTerm* x^xDegree);
+
                 if IsDefined(H1RDict,dictTerm) then
                     index := H1RDict[dictTerm];
-
+                    
                     entry[index] := entry[index]+coeffList[i];
+
                 end if;
                 
             end for;
-            
+        
         end for;
         Append(~FHN, entry);
     end for;
@@ -1124,7 +1128,7 @@ computeH1dR := function(p,r,n,f)
     cartierDict[1/varList[1]] := 1/varList[1];
 
     for w in O do
-        cartierResult := computeCartier(gs, w, p, varList, cartierDict,A);
+        cartierResult := computeCartier(gs, P!w, p, varList, cartierDict,R,B,A,P);
 
         terms := Terms(lift(cartierResult));
         entry := [0 : i in [1..g]];
@@ -1348,7 +1352,7 @@ computeH1dR := function(p,r,n,f)
     for i in [1 .. #H1R] do
         u := HyperClasses[i][2];
 
-        vu := computeCartier(gs, u, p, varList, cartierDict,A);
+        vu := computeCartier(gs, u, p, varList, cartierDict,R,B,A,P);
 
         terms := Terms(lift(vu));
         vec := [0 : i in [1..#O]];
