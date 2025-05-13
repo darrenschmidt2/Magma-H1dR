@@ -1351,8 +1351,12 @@ computeH1dR := function(p,r,n,f)
     //Computes Cartier Operator on H1 deRham
     for i in [1 .. #H1R] do
         u := HyperClasses[i][2];
-
-        vu := computeCartier(gs, u, p, varList, cartierDict,R,B,A,P);
+        w := HyperClasses[i][3];
+        if #Terms(u) le #Terms(w) then
+            vu := computeCartier(gs, u, p, varList, cartierDict,R,B,A,P);
+        else
+            vu := computeCartier(gs, -1*w, p, varList, cartierDict,R,B,A,P);
+        end if;
 
         terms := Terms(lift(vu));
         vec := [0 : i in [1..#O]];
