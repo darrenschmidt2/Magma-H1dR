@@ -15,4 +15,4 @@ The folder computedData contains the EO-types of already computed towers. Inside
 
 In each file inside, the prime power, the level of the tower, and the polynomial for the base curve are listed. Below that is a list giving the Ekedahl-Oort type of that level in the tower.
 
-Below the EO-type is a 3x3 matrix where the i,j-th entry represents the dimension of Ker$(V^j)$ intersecting Ker$\left(\frac{F^i}{F^{(i-1)}}\right)$ 
+Below the EO-type is a 3x3 matrix where the i,j-th entry represents the dimension of Ker $(V^j)$ intersecting Ker $\left(\frac{F^i}{F^{(i-1)}}\right)$ 
