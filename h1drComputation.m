@@ -853,8 +853,14 @@ computeCartier := function(funcList,df,p,varList,cartierDict,R,B,A,P)
 
             for j in [#exponents .. 2 by -1] do
                 if modList[j] ne 0 then
-
-                    cartier := &+[varList[j]^l*Binomial(modList[j],l)*$$(funcList, A!(expression/(varList[j]^modList[j])*(-funcList[j-1])^(modList[j]-l)),p,varList,cartierDict,R,B,A,P) : l in [0 .. modList[j]]];
+                    cartier := 0;
+                    for l in [0 .. modList[j]] do
+                        tempCartier, cartierDict := $$(funcList, A!(expression/(varList[j]^modList[j])*(-funcList[j-1])^(modList[j]-l)),p,varList,cartierDict,R,B,A,P);
+                        cartier := cartier + varList[j]^l*Binomial(modList[j],l)*tempCartier;
+                        
+                    //cartier := &+[varList[j]^l*Binomial(modList[j],l)*$$(funcList, A!(expression/(varList[j]^modList[j])*(-funcList[j-1])^(modList[j]-l)),p,varList,cartierDict,R,B,A,P) : l in [0 .. modList[j]]];
+                    
+                    end for;
                     cartierDict[expression] := cartier;
                     cartierComp := cartierComp + coefficients[i]*cartier * newExpression;
                     break;
@@ -863,7 +869,7 @@ computeCartier := function(funcList,df,p,varList,cartierDict,R,B,A,P)
         end if;
     end for;
 
-    return cartierComp;
+    return cartierComp, cartierDict;
 
         
 end function;
@@ -1128,7 +1134,7 @@ computeH1dR := function(p,r,n,f)
     cartierDict[1/varList[1]] := 1/varList[1];
 
     for w in O do
-        cartierResult := computeCartier(gs, P!w, p, varList, cartierDict,R,B,A,P);
+        cartierResult, cartierDict := computeCartier(gs, P!w, p, varList, cartierDict,R,B,A,P);
 
         terms := Terms(lift(cartierResult));
         entry := [0 : i in [1..g]];
@@ -1353,9 +1359,9 @@ computeH1dR := function(p,r,n,f)
         u := HyperClasses[i][2];
         w := HyperClasses[i][3];
         if #Terms(u) le #Terms(w) then
-            vu := computeCartier(gs, u, p, varList, cartierDict,R,B,A,P);
+            vu, cartierDict := computeCartier(gs, u, p, varList, cartierDict,R,B,A,P);
         else
-            vu := computeCartier(gs, -1*w, p, varList, cartierDict,R,B,A,P);
+            vu, cartierDict := computeCartier(gs, -1*w, p, varList, cartierDict,R,B,A,P);
         end if;
 
         terms := Terms(lift(vu));
